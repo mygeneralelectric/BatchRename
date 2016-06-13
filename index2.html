@@ -1,0 +1,133 @@
+<html>
+
+<head>
+    <meta charset='utf-8'>
+
+    <title>BetaApp1</title>
+
+    <link rel="stylesheet" href="./css/photon.css" />
+</head>
+
+<body>
+    <div class="window">
+
+        <!--头部-->
+        <header class="toolbar toolbar-header">
+            <div class="toolbar-actions">
+                <div class="btn-group">
+                    <button id = "add_file" class="btn btn-default pull-left">
+                        Add File
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <span>Or</span>
+                </div>
+                <div class="btn-group">
+                    <button id = "add_folder" class="btn btn-default pull-left">
+                        Add Folder
+                    </button>
+                </div>
+            </div>
+        </header>
+
+      <!--主体-->
+        <div class="window-content">
+            <div class="pane-group">
+
+                <div class="pane">
+                    <table id="my_table1" class="table-striped">
+                        <thead>
+                            <tr>
+                                <th>Old</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <!--<td>Row1 cell1</td>-->
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pane">
+                    <table id="my_table2" class="table-striped">
+                        <thead>
+                            <tr>
+                                <th>New</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <!--<td>Row1 cell2</td>-->
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!--尾部-->
+        <footer class="toolbar toolbar-footer">
+            <div class="toolbar-actions">
+                <button id = "batch_rename" class="btn btn-default pull-right">
+                Rename
+                </button>
+            </div>
+        </footer>
+
+    </div>
+</body>
+<script>
+    // require('../renderer.js')；
+    var fs = require("fs");
+    var pathManager = require('path');
+
+    const ipc = require('electron').ipcRenderer;
+    const table1 = document.getElementById("my_table1");
+    const table2 = document.getElementById("my_table2");
+
+    var oldPathArray = new Array();
+    var newPathArray = new Array();
+
+    const addFolderBtn = document.getElementById('add_folder');
+    addFolderBtn.addEventListener('click', function (event) {
+        ipc.send('open-file-dialog');
+        // let x = table1.insertRow(table1.rows.length);
+        // let y = x.insertCell(0);
+        // y.innerHTML = "path[x]";
+    });
+    ipc.on('selected-directory', function (event, path) {
+        for (x in path) {
+            let oldPath = path[x];
+            oldPathArray.push(oldPath);
+            let oldName = pathManager.basename(oldPath);
+            let insRow = table1.insertRow(table1.rows.length);
+            let insCell = insRow.insertCell(0);
+            insCell.innerHTML = oldName;
+            // table.insertRow(table.rows.length).insertCell(0).innerHTML = path[x];
+        }
+    });
+
+    const renameBtn = document.getElementById('batch_rename');
+    renameBtn.addEventListener('click', function (event) {
+        for (x in oldPathArray) {
+            let oldPath2 = oldPathArray[x];
+            let olaName2 = pathManager.basename(oldPath2);
+            let newName2 = x;
+            let newPath2 = oldPath2.replace(olaName2, "") + newName2;
+            newPathArray.push(newPath2);
+            // 重命名
+            fs.rename(oldPath2, newPath2, function(err) {
+                if (!err) {
+                    console.log(filename + '重命名成功!');
+                }
+            });
+            let insRow2 = table2.insertRow(table2.rows.length);
+            let insCell2 = insRow2.insertCell(0);
+            insCell2.innerHTML = newName2;
+        }
+    });
+</script>
+
+</html>
