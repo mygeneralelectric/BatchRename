@@ -70,6 +70,10 @@
         <!--尾部-->
         <footer class="toolbar toolbar-footer">
             <div class="toolbar-actions">
+                <button id = "clear_item" class="btn btn-default">
+                Clear
+                </button>
+
                 <button id = "batch_rename" class="btn btn-default pull-right">
                 Rename
                 </button>
@@ -92,7 +96,7 @@
 
     const addFolderBtn = document.getElementById('add_folder');
     addFolderBtn.addEventListener('click', function (event) {
-        ipc.send('open-file-dialog');
+        ipc.send('open-directory-dialog');
         // let x = table1.insertRow(table1.rows.length);
         // let y = x.insertCell(0);
         // y.innerHTML = "path[x]";
@@ -109,12 +113,35 @@
         }
     });
 
+    const addFileBtn = document.getElementById('add_file');
+    addFileBtn.addEventListener('click', function (event) {
+        ipc.send('open-file-dialog');
+    });
+    ipc.on('selected-file', function (event, path) {
+        for (x in path) {
+            let oldPath = path[x];
+            oldPathArray.push(oldPath);
+            let oldName = pathManager.basename(oldPath);
+            let insRow = table1.insertRow(table1.rows.length);
+            let insCell = insRow.insertCell(0);
+            insCell.innerHTML = oldName;
+            // table.insertRow(table.rows.length).insertCell(0).innerHTML = path[x];
+        }
+    });
+
     const renameBtn = document.getElementById('batch_rename');
     renameBtn.addEventListener('click', function (event) {
         for (x in oldPathArray) {
             let oldPath2 = oldPathArray[x];
+            // let newName2 = x;
+            let newName2 = null;
+            if (fs.statSync(oldPath2).isDirectory()) {
+                newName2 = x;
+            } else {
+                let oldExtension2 = pathManager.extname(oldPath2); // 扩展名
+                newName2 = x + oldExtension2;
+            }
             let olaName2 = pathManager.basename(oldPath2);
-            let newName2 = x;
             let newPath2 = oldPath2.replace(olaName2, "") + newName2;
             newPathArray.push(newPath2);
             // 重命名
@@ -128,6 +155,18 @@
             insCell2.innerHTML = newName2;
         }
     });
+
+    const clearBtn = document.getElementById('clear_item');
+    clearBtn.addEventListener('click', function (event) {
+        oldPathArray = [];
+        let rowNum=table1.rows.length;
+        for (i=1;i<rowNum;i++){
+            table1.deleteRow(i);
+            rowNum=rowNum-1;
+            i=i-1;
+        }
+    });
+
 </script>
 
 </html>
